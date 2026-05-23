@@ -1,0 +1,27 @@
+# --- MASTER DEPLOYMENT ENGINE: CHESTERFIELD x KINGPIN ---
+Write-Host "Initializing Kingpin Deployment Engine..." -ForegroundColor Cyan
+
+# 1. Find the project root automatically
+$Root = Get-ChildItem -Path . -Filter "package.json" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $Root) {
+    Write-Host "CRITICAL: package.json not found. Check your folder structure." -ForegroundColor Red
+    pause
+    exit
+}
+
+$ProjectDir = $Root.DirectoryName
+Set-Location -Path $ProjectDir
+Write-Host "Found project at: $ProjectDir" -ForegroundColor Green
+
+# 2. Prepare the environment (Clean & Install)
+Write-Host "Installing dependencies..." -ForegroundColor Yellow
+if (Test-Path "node_modules") { Remove-Item -Recurse -Force "node_modules" }
+npm install
+
+# 3. Build the project
+Write-Host "Building React project..." -ForegroundColor Yellow
+npm run build
+
+# 4. Final Deploy
+Write-Host "Deploying to Vercel..." -ForegroundColor Green
+npx vercel --prod --force

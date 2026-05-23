@@ -1,0 +1,31 @@
+# --- MASTER DEPLOYMENT: CHESTERFIELD x KINGPIN ---
+Write-Host "--- Starting Kingpin Deployment ---" -ForegroundColor Cyan
+
+# 1. Automatically find the folder containing package.json
+$Project = Get-ChildItem -Filter "package.json" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $Project) {
+    Write-Host "CRITICAL: package.json not found. Place this script in your project root." -ForegroundColor Red
+    pause
+    exit
+}
+
+$Path = $Project.DirectoryName
+Set-Location -Path $Path
+Write-Host "Project Root Found: $Path" -ForegroundColor Green
+
+# 2. Cleanup and Install
+Write-Host "Cleaning environment..." -ForegroundColor Yellow
+if (Test-Path "node_modules") { Remove-Item -Recurse -Force "node_modules" }
+if (Test-Path "package-lock.json") { Remove-Item -Force "package-lock.json" }
+
+Write-Host "Installing dependencies..." -ForegroundColor Yellow
+npm install
+
+# 3. Build the "Kingpin" Look
+# Ensure your App.css contains the glassmorphism styles
+Write-Host "Building project..." -ForegroundColor Yellow
+npm run build
+
+# 4. Final Deploy
+Write-Host "Pushing to Vercel..." -ForegroundColor Green
+npx vercel --prod --force --yes
